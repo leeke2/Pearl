@@ -161,7 +161,7 @@ class PearlAgent(Agent):
         else:
             self._latest_action = action
 
-        return action
+        return self._latest_action
 
     def observe(
         self,

@@ -103,6 +103,9 @@ class GymEnvironment(Environment):
         if isinstance(reset_result, Iterable) and isinstance(reset_result[1], dict):
             # newer Gym versions return an info dict.
             observation, info = self.env.reset(seed=seed)
+
+            if "available_action_space" in info:
+                self._action_space = info["available_action_space"]
         else:
             # TODO: Deprecate this part at some point and only support new
             # version of Gymnasium?

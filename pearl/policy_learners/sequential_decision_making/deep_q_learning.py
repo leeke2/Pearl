@@ -88,8 +88,10 @@ class DeepQLearning(DeepTDLearning):
         next_unavailable_actions_mask_batch = batch.next_unavailable_actions_mask
         # (batch_size x action_space_size)
 
-        assert isinstance(self._action_space, DiscreteActionSpace)
-        number_of_actions = self._action_space.n
+        # Kelvin fixed this
+        # assert isinstance(self._action_space, DiscreteActionSpace)
+        # number_of_actions = self._action_space.n
+        number_of_actions = self.action_representation_module.max_number_actions
         next_state_batch_repeated = torch.repeat_interleave(
             next_state_batch.unsqueeze(1), number_of_actions, dim=1
         )  # (batch_size x action_space_size x state_dim)
