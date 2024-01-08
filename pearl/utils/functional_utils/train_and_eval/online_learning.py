@@ -11,9 +11,13 @@ from typing import Any, Dict, List, Optional, Tuple
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+
 from pearl.api.environment import Environment
 from pearl.api.reward import Value
 from pearl.pearl_agent import PearlAgent
+from pearl.policy_learners.exploration_modules.common.epsilon_greedy_exploration import (
+    EGreedyExploration,
+)
 from pearl.utils.functional_utils.experimentation.plots import fontsize_for
 
 MA_WINDOW_SIZE = 10
@@ -76,6 +80,8 @@ def online_learning(
     print_every_x_episodes: Optional[int] = None,
     print_every_x_steps: Optional[int] = None,
     seed: Optional[int] = None,
+    eps_start: float = 1.0,
+    eps_end: float = 0.02,
     # if number_of_episodes is used, report every record_period episodes
     # if number_of_steps is used, report every record_period steps
     # episodic stats collected within the period are averaged and then reported
@@ -104,6 +110,12 @@ def online_learning(
         if number_of_steps is not None and total_steps >= number_of_steps:
             break
         old_total_steps = total_steps
+
+        if isinstance(agent.policy_learner.exploration_module, EGreedyExploration):
+            agent.policy_learner.exploration_module.epsilon = (
+                eps_start + total_steps / number_of_steps * (eps_end - eps_start)
+            )
+
         episode_info, episode_total_steps = run_episode(
             agent,
             env,
