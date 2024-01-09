@@ -9,6 +9,8 @@ import logging
 from typing import Any, Dict, Iterable, Optional, Tuple, Union
 
 import numpy as np
+from torch import Tensor
+
 from pearl.api.action import Action
 from pearl.api.action_result import ActionResult
 from pearl.api.action_space import ActionSpace
@@ -19,7 +21,6 @@ from pearl.utils.instantiations.spaces.box import BoxSpace
 from pearl.utils.instantiations.spaces.box_action import BoxActionSpace
 from pearl.utils.instantiations.spaces.discrete import DiscreteSpace
 from pearl.utils.instantiations.spaces.discrete_action import DiscreteActionSpace
-from torch import Tensor
 
 try:
     import gymnasium as gym
@@ -95,21 +96,16 @@ class GymEnvironment(Environment):
     def reset(self, seed: Optional[int] = None) -> Tuple[Observation, ActionSpace]:
         """Resets the environment and returns the initial observation and
         initial action space."""
+        observation, info = self.env.reset(seed=seed)
+
+        if "available_action_space" in info:
+            self._action_space = info["available_action_space"]
+
         # pyre-fixme: ActionSpace does not have _gym_space
         # FIXME: private attribute _gym_space should not be accessed
         self._action_space._gym_space.seed(seed)
         self.env.action_space.seed(seed)
-        reset_result = self.env.reset()
-        if isinstance(reset_result, Iterable) and isinstance(reset_result[1], dict):
-            # newer Gym versions return an info dict.
-            observation, info = self.env.reset(seed=seed)
 
-            if "available_action_space" in info:
-                self._action_space = info["available_action_space"]
-        else:
-            # TODO: Deprecate this part at some point and only support new
-            # version of Gymnasium?
-            observation = list(reset_result.values())[0]  # pyre-ignore
         if isinstance(observation, np.ndarray):
             observation = observation.astype(np.float32)
         return observation, self.action_space
